@@ -3,7 +3,7 @@ from database import Base
 from sqlalchemy import ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
-
+from sqlalchemy import Text
 class User(Base):
     __tablename__ = "users"
 
@@ -69,6 +69,29 @@ class Document(Base):
     )
 
     uploaded_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+class CodeSnippet(Base):
+    __tablename__ = "code_snippets"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id")
+    )
+
+    language = Column(String)
+
+    code = Column(Text)
+
+    created_at = Column(
         DateTime,
         default=datetime.utcnow
     )

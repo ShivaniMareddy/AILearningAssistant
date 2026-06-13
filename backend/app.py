@@ -24,7 +24,8 @@ from schemas import (
     UserCreate,
     UserLogin,
     ConversationCreate,
-    MessageCreate
+    MessageCreate,
+    CodeSnippetCreate
 )
 from fastapi import UploadFile, File
 import shutil
@@ -43,6 +44,16 @@ from rag.chunking import chunk_text
 from rag.embeddings import create_embeddings
 from rag.vectordb import store_chunks
 from schemas import DocumentResponse
+
+import subprocess
+import tempfile
+import os
+
+from schemas import CodeRequest
+from coding_assistant import explain_error
+
+from models import CodeSnippet
+
 app = FastAPI()
 UPLOAD_DIR = "uploads"
 
@@ -469,4 +480,96 @@ def delete_document(
 
     return {
         "message": "Document Deleted Successfully"
+    }
+@app.post("/run-python")
+def run_python(request: CodeRequest):
+
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".py",
+        delete=False
+    ) as temp_file:
+
+        temp_file.write(request.code)
+        temp_path = temp_file.name
+
+    try:
+
+        result = subprocess.run(
+            ["python3", temp_path],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        if result.stderr:
+
+            explanation = explain_error(
+                result.stderr
+            )
+
+            return {
+                "output": result.stdout,
+                "error": result.stderr,
+                "ai_explanation": explanation
+            }
+
+        return {
+            "output": result.stdout,
+            "error": ""
+        }
+
+    finally:
+        os.remove(temp_path)
+@app.post("/save-snippet")
+def save_snippet(
+    snippet: CodeSnippetCreate,
+    db: Session = Depends(get_db)
+):
+
+    new_snippet = CodeSnippet(
+        user_id=1,
+        language=snippet.language,
+        code=snippet.code
+    )
+
+    db.add(new_snippet)
+    db.commit()
+
+    return {
+        "message": "Snippet Saved"
+    }
+@app.get("/snippets")
+def get_snippets(
+    db: Session = Depends(get_db)
+):
+
+    snippets = db.query(
+        CodeSnippet
+    ).all()
+
+    return snippets
+@app.delete("/snippet/{snippet_id}")
+def delete_snippet(
+    snippet_id: int,
+    db: Session = Depends(get_db)
+):
+
+    snippet = db.query(
+        CodeSnippet
+    ).filter(
+        CodeSnippet.id == snippet_id
+    ).first()
+
+    if not snippet:
+        raise HTTPException(
+            status_code=404,
+            detail="Snippet not found"
+        )
+
+    db.delete(snippet)
+    db.commit()
+
+    return {
+        "message": "Snippet Deleted"
     }

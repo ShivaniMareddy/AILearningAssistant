@@ -48,3 +48,8 @@ class DocumentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class CodeRequest(BaseModel):
+    code: str
+class CodeSnippetCreate(BaseModel):
+    language: str
+    code: str
