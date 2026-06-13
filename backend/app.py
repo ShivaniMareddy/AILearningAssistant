@@ -53,6 +53,9 @@ from schemas import CodeRequest
 from coding_assistant import explain_error
 
 from models import CodeSnippet
+import subprocess
+import tempfile
+import os
 
 app = FastAPI()
 UPLOAD_DIR = "uploads"
@@ -573,3 +576,136 @@ def delete_snippet(
     return {
         "message": "Snippet Deleted"
     }
+@app.post("/run-java")
+def run_java(request: CodeRequest):
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+
+        java_file = os.path.join(
+            temp_dir,
+            "Main.java"
+        )
+
+        with open(java_file, "w") as f:
+            f.write(request.code)
+
+        compile_result = subprocess.run(
+            ["javac", java_file],
+            capture_output=True,
+            text=True
+        )
+
+        if compile_result.stderr:
+
+            explanation = explain_error(
+                compile_result.stderr
+            )
+
+            return {
+                "output": "",
+                "error": compile_result.stderr,
+                "ai_explanation": explanation
+            }
+
+        run_result = subprocess.run(
+            [
+                "java",
+                "-cp",
+                temp_dir,
+                "Main"
+            ],
+            capture_output=True,
+            text=True
+        )
+
+        if run_result.stderr:
+
+            explanation = explain_error(
+                run_result.stderr
+            )
+
+            return {
+                "output": "",
+                "error": run_result.stderr,
+                "ai_explanation": explanation
+            }
+@app.post("/run-javascript")
+def run_javascript(request: CodeRequest):
+
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".js",
+        delete=False
+    ) as temp_file:
+
+        temp_file.write(request.code)
+        temp_path = temp_file.name
+
+    try:
+
+        result = subprocess.run(
+            ["node", temp_path],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        if result.stderr:
+
+            explanation = explain_error(
+                result.stderr
+            )
+
+            return {
+                "output": "",
+                "error": result.stderr,
+                "ai_explanation": explanation
+            }
+
+        return {
+            "output": result.stdout,
+            "error": ""
+        }
+
+    finally:
+        os.remove(temp_path)
+@app.post("/run-javascript")
+def run_javascript(request: CodeRequest):
+
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".js",
+        delete=False
+    ) as temp_file:
+
+        temp_file.write(request.code)
+        temp_path = temp_file.name
+
+    try:
+
+        result = subprocess.run(
+            ["node", temp_path],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        if result.stderr:
+
+            explanation = explain_error(
+                result.stderr
+            )
+
+            return {
+                "output": "",
+                "error": result.stderr,
+                "ai_explanation": explanation
+            }
+
+        return {
+            "output": result.stdout,
+            "error": ""
+        }
+
+    finally:
+        os.remove(temp_path)
