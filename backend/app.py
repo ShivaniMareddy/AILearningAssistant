@@ -56,8 +56,17 @@ from models import CodeSnippet
 import subprocess
 import tempfile
 import os
-
+from fastapi.middleware.cors import CORSMiddleware
+from rag.llm import generate_answer
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 UPLOAD_DIR = "uploads"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -162,6 +171,7 @@ def get_current_user(
 ):
 
     try:
+        print("TOKEN RECEIVED:", token)
 
         payload = jwt.decode(
             token,
@@ -276,9 +286,8 @@ def send_message(
 
     db.add(user_message)
 
-    ai_response_text = (
-        "This is a sample AI response for: "
-        + message.message
+    ai_response_text = generate_answer(
+        message.message
     )
 
     ai_message = Message(
@@ -313,6 +322,7 @@ def get_all_conversations(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    print("CURRENT USER:", current_user.email)
 
     conversations = db.query(
         Conversation
@@ -368,7 +378,8 @@ def search_messages(
 @app.post("/upload-pdf")
 def upload_pdf(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     file_path = f"{UPLOAD_DIR}/{file.filename}"
@@ -393,7 +404,7 @@ def upload_pdf(
     )
     new_document = Document(
         filename=file.filename,
-        uploaded_by=1
+        uploaded_by=current_user.id
     )
     print("Saving document:", file.filename)
     db.add(new_document)
@@ -531,7 +542,7 @@ def save_snippet(
 ):
 
     new_snippet = CodeSnippet(
-        user_id=1,
+        user_id=current_user.id,
         language=snippet.language,
         code=snippet.code
     )
@@ -544,12 +555,16 @@ def save_snippet(
     }
 @app.get("/snippets")
 def get_snippets(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     snippets = db.query(
-        CodeSnippet
-    ).all()
+    CodeSnippet
+        ).filter(
+            CodeSnippet.user_id ==
+            current_user.id
+        ).all()
 
     return snippets
 @app.delete("/snippet/{snippet_id}")
@@ -629,46 +644,10 @@ def run_java(request: CodeRequest):
                 "error": run_result.stderr,
                 "ai_explanation": explanation
             }
-@app.post("/run-javascript")
-def run_javascript(request: CodeRequest):
-
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".js",
-        delete=False
-    ) as temp_file:
-
-        temp_file.write(request.code)
-        temp_path = temp_file.name
-
-    try:
-
-        result = subprocess.run(
-            ["node", temp_path],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        if result.stderr:
-
-            explanation = explain_error(
-                result.stderr
-            )
-
-            return {
-                "output": "",
-                "error": result.stderr,
-                "ai_explanation": explanation
-            }
-
         return {
-            "output": result.stdout,
+            "output": run_result.stdout,
             "error": ""
         }
-
-    finally:
-        os.remove(temp_path)
 @app.post("/run-javascript")
 def run_javascript(request: CodeRequest):
 
