@@ -32,7 +32,6 @@ import shutil
 import os
 
 from rag.pdf_loader import extract_text_from_pdf
-from rag.embeddings import model
 from rag.vectordb import search_chunks
 from schemas import QuestionRequest
 
