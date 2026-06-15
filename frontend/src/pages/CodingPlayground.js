@@ -1,7 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
-
+import { useNavigate } from "react-router-dom";
 function CodingPlayground() {
+    const navigate = useNavigate();
+    useEffect(() => {
+
+  const token =
+    localStorage.getItem("token");
+
+  if (!token) {
+    navigate("/");
+  }
+
+}, [navigate]);
 
   const [language, setLanguage] =
     useState("python");
@@ -54,70 +65,130 @@ function CodingPlayground() {
   };
 
   return (
-    <div>
+  <div className="container">
+    <div
+  style={{
+    display:"flex",
+    justifyContent:"space-between",
+    alignItems:"center"
+  }}
+>
 
-      <h1>Coding Playground</h1>
+  <button
+    className="back-btn"
+    onClick={() =>
+      navigate("/dashboard")
+    }
+  >
+    ← Dashboard
+  </button>
 
-      <select
-        value={language}
-        onChange={(e) =>
-          setLanguage(
-            e.target.value
-          )
-        }
-      >
-        <option value="python">
-          Python
-        </option>
+  <button
+    className="logout-btn"
+    onClick={() => {
 
-        <option value="java">
-          Java
-        </option>
+      localStorage.removeItem(
+        "token"
+      );
 
-        <option value="javascript">
-          JavaScript
-        </option>
+      navigate("/");
 
-      </select>
+    }}
+  >
+    Logout
+  </button>
 
-      <br />
-      <br />
+</div>
 
-      <textarea
-        rows="15"
-        cols="80"
-        placeholder="Write code here..."
-        value={code}
-        onChange={(e) =>
-          setCode(
-            e.target.value
-          )
-        }
-      />
+    <h1>💻 Coding Playground</h1>
 
-      <br />
-      <br />
+    <div className="playground-layout">
 
-      <button onClick={runCode}>
-        Run Code
-      </button>
+      <div className="editor-card">
 
-      <hr />
+        <h3>Code Editor</h3>
 
-      <h3>Output</h3>
+        <select
+          value={language}
+          onChange={(e) =>
+            setLanguage(
+              e.target.value
+            )
+          }
+        >
+          <option value="python">
+            Python
+          </option>
 
-      <pre>{output}</pre>
+          <option value="java">
+            Java
+          </option>
 
-      <h3>Error</h3>
+          <option value="javascript">
+            JavaScript
+          </option>
+        </select>
 
-      <pre>{error}</pre>
+        <textarea
+          rows="15"
+          placeholder="Write code here..."
+          value={code}
+          onChange={(e) =>
+            setCode(
+              e.target.value
+            )
+          }
+        />
 
-      <h3>AI Explanation</h3>
+        <button
+          onClick={runCode}
+        >
+          Run Code
+        </button>
 
-      <p>{aiExplanation}</p>
+      </div>
+
+      <div className="results-card">
+
+        <div className="result-section">
+
+          <h3>Output</h3>
+
+          <pre>
+            {output ||
+              "Run code to see output"}
+          </pre>
+
+        </div>
+
+        <div className="result-section">
+
+          <h3>Error</h3>
+
+          <pre>
+            {error ||
+              "No errors"}
+          </pre>
+
+        </div>
+
+        <div className="result-section">
+
+          <h3>AI Explanation</h3>
+
+          <p>
+            {aiExplanation ||
+              "AI explanation will appear here"}
+          </p>
+
+        </div>
+
+      </div>
 
     </div>
-  );
+
+  </div>
+);
 }
 
 export default CodingPlayground;

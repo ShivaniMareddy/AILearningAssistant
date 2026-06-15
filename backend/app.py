@@ -389,9 +389,17 @@ def upload_pdf(
 
     # Extract Text
     extracted_text = extract_text_from_pdf(file_path)
+    
+
+    print(
+    extracted_text[:1000]
+    )
 
     # Create Chunks
     chunks = chunk_text(extracted_text)
+    
+
+    
 
     # Generate Embeddings
     embeddings = create_embeddings(chunks)
@@ -426,6 +434,7 @@ def ask_question(request: QuestionRequest):
     results = search_chunks(
         query_embedding
     )
+    
 
     context = "\n".join(
         results["documents"]
@@ -538,7 +547,8 @@ def run_python(request: CodeRequest):
 @app.post("/save-snippet")
 def save_snippet(
     snippet: CodeSnippetCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     new_snippet = CodeSnippet(
@@ -570,14 +580,16 @@ def get_snippets(
 @app.delete("/snippet/{snippet_id}")
 def delete_snippet(
     snippet_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     snippet = db.query(
-        CodeSnippet
-    ).filter(
-        CodeSnippet.id == snippet_id
-    ).first()
+    CodeSnippet
+).filter(
+    CodeSnippet.id == snippet_id,
+    CodeSnippet.user_id == current_user.id
+).first()
 
     if not snippet:
         raise HTTPException(

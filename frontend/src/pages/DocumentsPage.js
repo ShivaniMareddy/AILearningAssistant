@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-
+import { useNavigate } from "react-router-dom";
 function DocumentsPage() {
+    const navigate = useNavigate();
 
   const [documents, setDocuments] =
     useState([]);
@@ -22,8 +23,21 @@ const [sources,
   setSources] =
   useState([]);
     useEffect(() => {
-    loadDocuments();
-  }, []);
+
+  const token =
+    localStorage.getItem("token");
+
+  if (!token) {
+
+    navigate("/");
+
+    return;
+
+  }
+
+  loadDocuments();
+
+}, []);
 
   const loadDocuments = async () => {
 
@@ -85,90 +99,181 @@ setSources(
 };
 
   return (
-    <div>
-
-      <h1>Documents</h1>
-      <input
-  type="file"
-  accept=".pdf"
-  onChange={(e) =>
-    setSelectedFile(
-      e.target.files[0]
-    )
-  }
-/>
-
-<button
-  onClick={uploadPDF}
+  <div className="container">
+    <div
+  style={{
+    display:"flex",
+    justifyContent:"space-between",
+    alignItems:"center"
+  }}
 >
-  Upload PDF
-</button>
 
-<hr />
-<h3>Ask a Question</h3>
+  <button
+    className="back-btn"
+    onClick={() =>
+      navigate("/dashboard")
+    }
+  >
+    ← Dashboard
+  </button>
 
-<input
-  type="text"
-  placeholder="Ask about your PDFs..."
-  value={question}
-  onChange={(e) =>
-    setQuestion(
-      e.target.value
+  <button
+    className="logout-btn"
+    onClick={() => {
+
+      localStorage.removeItem(
+        "token"
+      );
+
+      navigate("/");
+
+    }}
+  >
+    Logout
+  </button>
+
+</div>
+
+    <h1>📄 Document Assistant</h1>
+
+    <div className="documents-layout">
+
+      {/* LEFT PANEL */}
+
+      <div className="documents-sidebar">
+
+        <h3>Upload PDF</h3>
+
+        <input
+          type="file"
+          accept=".pdf"
+          onChange={(e) =>
+            setSelectedFile(
+              e.target.files[0]
+            )
+          }
+        />
+
+        <button
+          onClick={uploadPDF}
+        >
+          Upload PDF
+        </button>
+
+        <hr />
+
+        <h3>Uploaded Documents</h3>
+
+        {documents.length === 0 ? (
+
+  <p>
+    No documents uploaded yet
+  </p>
+
+) : (
+
+  documents.map(
+    (document) => (
+
+      <div
+        key={document.id}
+        className="document-item"
+      >
+        📄 {document.filename}
+      </div>
+
     )
-  }
-/>
+  )
 
-<button
-  onClick={askQuestion}
->
-  Ask
-</button>
+)}
 
-<br />
-<br />
+      </div>
 
-<b>Answer:</b>
+      {/* RIGHT PANEL */}
 
-<p>{answer}</p>
-<p>
-  <b>Confidence:</b>
-  {confidence}%
+      <div className="documents-content">
+
+        <h3>Ask a Question</h3>
+
+        <div className="question-box">
+
+          <input
+            type="text"
+            placeholder="Ask about your PDFs..."
+            value={question}
+            onChange={(e) =>
+              setQuestion(
+                e.target.value
+              )
+            }
+          />
+
+          <button
+            onClick={askQuestion}
+          >
+            Ask
+          </button>
+
+        </div>
+
+        <div className="answer-card">
+
+          <h3>Answer</h3>
+
+          {answer ? (
+
+  <p>{answer}</p>
+
+) : (
+
+  <p className="answer-placeholder">
+    Ask a question to get started...
+  </p>
+
+)}
+
+          {confidence && (
+
+            <>
+              <hr />
+
+              <p className="confidence-badge">
+  Confidence: {confidence}%
 </p>
 
-<p>
-  <b>Sources:</b>
-</p>
+              <p>
+                <b>Sources:</b>
+              </p>
 
-<ul>
-  {sources.map(
-    (source, index) => (
-      <li key={index}>
-        {source}
-      </li>
-    )
-  )}
-</ul>
+              <ul>
 
-<hr />
+                {sources.map(
+                  (
+                    source,
+                    index
+                  ) => (
 
-      <h3>Uploaded Documents</h3>
+                    <li key={index}>
+                      {source}
+                    </li>
 
-      <ul>
+                  )
+                )}
 
-        {documents.map(
-          (document) => (
+              </ul>
 
-            <li key={document.id}>
-              {document.filename}
-            </li>
+            </>
 
-          )
-        )}
+          )}
 
-      </ul>
+        </div>
+
+      </div>
 
     </div>
-  );
+
+  </div>
+);
 }
 
 export default DocumentsPage;

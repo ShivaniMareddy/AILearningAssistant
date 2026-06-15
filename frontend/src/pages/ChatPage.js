@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-
+import { useNavigate } from "react-router-dom";
 function ChatPage() {
+
+  const navigate = useNavigate();
 
   const [conversations, setConversations] =
     useState([]);
@@ -18,32 +20,52 @@ function ChatPage() {
   const [newMessage, setNewMessage] =
     useState("");
   useEffect(() => {
-    loadConversations();
-  }, []);
+
+  const token =
+    localStorage.getItem("token");
+
+  if (!token) {
+
+    navigate("/");
+
+    return;
+
+  }
+
+  loadConversations();
+
+}, []);
 
   const loadConversations = async () => {
     
 
     const token =
       localStorage.getItem("token");
-    console.log(
-        "LOAD TOKEN:",
-        token
-        );
 
-    const response = await api.get(
-      "/conversations",
-      {
-        headers: {
-          Authorization:
-            `Bearer ${token}`
-        }
+    try {
+
+  const response = await api.get(
+    "/conversations",
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`
       }
-    );
+    }
+  );
 
-    setConversations(
-      response.data
-    );
+  setConversations(
+    response.data
+  );
+
+} catch (error) {
+
+  console.log(
+    "CHAT ERROR:",
+    error.response?.data
+  );
+
+}
   };
 
   const loadMessages = async (
@@ -77,10 +99,7 @@ function ChatPage() {
 
   const token =
     localStorage.getItem("token");
-  console.log(
-    "SEND TOKEN:",
-    token
-    );
+
 
   await api.post(
     "/message/send",
@@ -168,105 +187,188 @@ const deleteConversation =
     setMessages([]);
 };
   return (
-    <div>
-
-      <h1>Chat Assistant</h1>
-      <input
-  type="text"
-  placeholder="Conversation Title"
-  value={newConversationTitle}
-  onChange={(e) =>
-    setNewConversationTitle(
-      e.target.value
-    )
-  }
-/>
-
-<button
-  onClick={createConversation}
+  <div className="container">
+    <div
+  style={{
+    display:"flex",
+    justifyContent:"space-between",
+    alignItems:"center"
+  }}
 >
-  New Conversation
-</button>
 
-<hr />
+  <button
+    className="back-btn"
+    onClick={() =>
+      navigate("/dashboard")
+    }
+  >
+    ← Dashboard
+  </button>
 
-      <h3>Your Conversations</h3>
+  <button
+    className="logout-btn"
+    onClick={() => {
 
-      <ul>
+      localStorage.removeItem(
+        "token"
+      );
+
+      navigate("/");
+
+    }}
+  >
+    Logout
+  </button>
+
+</div>
+    
+
+    <h1>💬 Chat Assistant</h1>
+
+    <div className="chat-layout">
+
+      {/* LEFT PANEL */}
+
+      <div className="sidebar">
+
+        <h3>Conversations</h3>
+
+        <input
+          type="text"
+          placeholder="Conversation Title"
+          value={newConversationTitle}
+          onChange={(e) =>
+            setNewConversationTitle(
+              e.target.value
+            )
+          }
+        />
+
+        <button
+          onClick={createConversation}
+        >
+          New Conversation
+        </button>
+
+        <br />
+        <br />
 
         {conversations.map(
           (conversation) => (
 
-            <li key={conversation.id}>
+            <div
+              key={conversation.id}
+              className={
+  selectedConversation ===
+  conversation.id
+    ? "conversation-item conversation-active"
+    : "conversation-item"
+}
+            >
 
-  <span
-    onClick={() =>
-      loadMessages(
-        conversation.id
-      )
-    }
-    style={{
-      cursor: "pointer"
-    }}
-  >
-    {conversation.title}
-  </span>
+              <span
+                onClick={() =>
+                  loadMessages(
+                    conversation.id
+                  )
+                }
+              >
+                {conversation.title}
+              </span>
 
-  <button
-    onClick={() =>
-      deleteConversation(
-        conversation.id
-      )
-    }
-  >
-    Delete
-  </button>
+              <button
+                onClick={() =>
+                  deleteConversation(
+                    conversation.id
+                  )
+                }
+              >
+                X
+              </button>
 
-</li>
+            </div>
+
           )
         )}
 
-      </ul>
+      </div>
 
-      <hr />
+      {/* RIGHT PANEL */}
 
-      <h3>Messages</h3>
+      <div className="chat-window">
 
-      {messages.map(
-        (message) => (
+        <h3>Messages</h3>
 
-          <p key={message.id}>
-            <b>
-              {message.sender}
-            </b>
-            :
-            {" "}
-            {message.message}
-          </p>
+        <div className="messages-area">
+            {messages.length === 0 && (
 
-        )
-      )}
-      <hr />
+    <div
+      style={{
+        textAlign:"center",
+        marginTop:"150px",
+        color:"#64748b"
+      }}
+    >
+      Select a conversation
+      and start chatting 🚀
+    </div>
 
-<input
-  type="text"
-  placeholder="Type a message..."
-  value={newMessage}
-  onChange={(e) =>
-    setNewMessage(
-      e.target.value
-    )
-  }
-/>
+  )}
 
-<button
-  onClick={sendMessage}
->
-  Send
-</button>
+          {messages.map(
+            (message) => (
+
+              <div
+                key={message.id}
+                className={
+                  message.sender === "User"
+                    ? "message-user"
+                    : "message-ai"
+                }
+              >
+
+                <b>
+                  {message.sender}
+                </b>
+
+                <br />
+
+                {message.message}
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+        <div className="message-box">
+
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={newMessage}
+            onChange={(e) =>
+              setNewMessage(
+                e.target.value
+              )
+            }
+          />
+
+          <button
+            onClick={sendMessage}
+          >
+            Send
+          </button>
+
+        </div>
+
+      </div>
 
     </div>
-  );
+
+  </div>
+);
 }
 
 export default ChatPage;
