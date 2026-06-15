@@ -34,6 +34,8 @@ def search_chunks(query_embedding, n_results=3):
         n_results=n_results,
         include=["documents", "metadatas", "distances"]
     )
+    print("RESULTS:")
+    print(results)
 
     return {
         "documents": results["documents"][0],
