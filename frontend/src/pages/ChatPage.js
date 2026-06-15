@@ -34,7 +34,7 @@ function ChatPage() {
 
   loadConversations();
 
-}, []);
+}, [navigate]);
 
   const loadConversations = async () => {
     

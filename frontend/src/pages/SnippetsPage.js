@@ -28,7 +28,7 @@ function SnippetsPage() {
 
   loadSnippets();
 
-}, []);
+}, [navigate]);
 
  const loadSnippets = async () => {
 

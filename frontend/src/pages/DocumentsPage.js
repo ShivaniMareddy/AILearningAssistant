@@ -37,7 +37,7 @@ const [sources,
 
   loadDocuments();
 
-}, []);
+}, [navigate]);
 
   const loadDocuments = async () => {
 
