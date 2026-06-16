@@ -1,3 +1,4 @@
+print("APP STARTING...")
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -57,6 +58,8 @@ import tempfile
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from rag.llm import generate_answer
+
+print("IMPORTS FINISHED")
 app = FastAPI()
 
 app.add_middleware(
