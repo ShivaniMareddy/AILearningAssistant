@@ -396,8 +396,15 @@ def upload_pdf(
     )
 
     # Create Chunks
+    # Create Chunks
     chunks = chunk_text(extracted_text)
-    
+
+    print("TOTAL CHUNKS:", len(chunks))
+
+    for i, chunk in enumerate(chunks):
+        print(f"\nCHUNK {i}")
+        print(chunk)
+        print("---------------------")
 
     
 
@@ -427,9 +434,9 @@ def upload_pdf(
 @app.post("/ask")
 def ask_question(request: QuestionRequest):
 
-    query_embedding = model.encode(
-        request.question
-    )
+    query_embedding = create_embeddings(
+        [request.question]
+        )[0]
 
     results = search_chunks(
         query_embedding
@@ -448,6 +455,14 @@ def ask_question(request: QuestionRequest):
     answer = generate_answer(
         prompt
     )
+    if not results["documents"]:
+
+        return {
+            "question": request.question,
+            "answer": "No documents found. Please upload a PDF first.",
+            "sources": [],
+            "confidence": 0
+        }
     distance = min(
         results["distances"]
     )
