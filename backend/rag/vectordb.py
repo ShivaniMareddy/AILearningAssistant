@@ -1,12 +1,15 @@
 import chromadb
 import uuid
-client = chromadb.PersistentClient(
-    path="vector_db"
-)
+import chromadb
 
-collection = client.get_or_create_collection(
-    name="documents"
-)
+def get_collection():
+    client = chromadb.PersistentClient(
+        path="vector_db"
+    )
+
+    return client.get_or_create_collection(
+        name="documents"
+    )
 
 
 def store_chunks(chunks, embeddings,pdf_name):
@@ -15,6 +18,7 @@ def store_chunks(chunks, embeddings,pdf_name):
     str(uuid.uuid4())
     for _ in chunks
     ]
+    collection = get_collection()
 
     collection.add(
     ids=ids,
@@ -28,6 +32,7 @@ def store_chunks(chunks, embeddings,pdf_name):
 
 
 def search_chunks(query_embedding, n_results=3):
+    collection = get_collection()
 
     results = collection.query(
         query_embeddings=[query_embedding.tolist()],
