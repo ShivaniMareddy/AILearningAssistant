@@ -99,6 +99,8 @@ function ChatPage() {
 
   const token =
     localStorage.getItem("token");
+  console.log("selectedConversation =", selectedConversation);
+console.log("message =", newMessage);
 
 
   await api.post(
