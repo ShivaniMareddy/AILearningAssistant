@@ -1,11 +1,32 @@
-from sentence_transformers import SentenceTransformer
+import requests
+import os
 
-def create_embeddings(chunks):
+OPENROUTER_API_KEY = os.getenv(
+    "OPENROUTER_API_KEY"
+)
 
-    model = SentenceTransformer(
-        "all-MiniLM-L6-v2"
-    )
+def create_embeddings(texts):
 
-    embeddings = model.encode(chunks)
+    embeddings = []
+
+    for text in texts:
+
+        response = requests.post(
+            "https://openrouter.ai/api/v1/embeddings",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "openai/text-embedding-3-small",
+                "input": text
+            }
+        )
+
+        embedding = (
+            response.json()["data"][0]["embedding"]
+        )
+
+        embeddings.append(embedding)
 
     return embeddings

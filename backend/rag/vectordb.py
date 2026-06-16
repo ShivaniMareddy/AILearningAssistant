@@ -22,12 +22,14 @@ def store_chunks(chunks, embeddings, pdf_name):
     collection.add(
         ids=ids,
         documents=chunks,
-        embeddings=embeddings.tolist(),
+        embeddings=embeddings,
         metadatas=[
             {"source": pdf_name}
             for _ in chunks
         ]
     )
+    print("STORE_CHUNKS CALLED")
+    print("Chunks:", len(chunks))
 
     print("Stored successfully")
     print("Total docs in collection:", collection.count())
@@ -38,7 +40,7 @@ def search_chunks(query_embedding, n_results=3):
     collection = get_collection()
 
     results = collection.query(
-        query_embeddings=[query_embedding.tolist()],
+        query_embeddings=[query_embedding],
         n_results=n_results,
         include=["documents", "metadatas", "distances"]
     )
