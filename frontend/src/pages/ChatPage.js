@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 function ChatPage() {
 
   const navigate = useNavigate();
@@ -335,7 +337,9 @@ const deleteConversation =
 
                 <br />
 
-                {message.message}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+  {message.message}
+</ReactMarkdown>
 
               </div>
 
