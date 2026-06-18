@@ -18,6 +18,10 @@ const [answer,
   const [confidence,
   setConfidence] =
   useState("");
+const [
+  selectedDocument,
+  setSelectedDocument
+] = useState("");
 
 const [sources,
   setSources] =
@@ -78,12 +82,14 @@ const askQuestion =
       return;
 
     const response =
-      await api.post(
-        "/ask",
-        {
-          question
-        }
-      );
+  await api.post(
+    "/ask",
+    {
+      question,
+      selected_document:
+        selectedDocument
+    }
+  );
 
     setAnswer(
   response.data.answer
@@ -192,6 +198,32 @@ setSources(
       {/* RIGHT PANEL */}
 
       <div className="documents-content">
+        <h4>Select Document</h4>
+
+<select
+  value={selectedDocument}
+  onChange={(e) =>
+    setSelectedDocument(
+      e.target.value
+    )
+  }
+>
+  <option value="">
+    All Documents
+  </option>
+
+  {documents.map((document) => (
+    <option
+      key={document.id}
+      value={document.filename}
+    >
+      {document.filename}
+    </option>
+  ))}
+</select>
+
+<br />
+<br />
 
         <h3>Ask a Question</h3>
 
