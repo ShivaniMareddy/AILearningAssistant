@@ -13,6 +13,8 @@ def get_collection():
 
 def store_chunks(chunks,embeddings,pdf_name,user_id):
     collection = get_collection()
+    print("USER ID:", user_id)
+    print("PDF NAME:", pdf_name)
 
     print("STORE_CHUNKS CALLED")
     print("Chunks:", len(chunks))
@@ -31,6 +33,13 @@ def store_chunks(chunks,embeddings,pdf_name,user_id):
             for _ in chunks
         ]
     )
+    print("STORED SUCCESSFULLY")
+
+    print("TOTAL DOCS:")
+    print(collection.count())
+
+    print("SAMPLE DATA:")
+    print(collection.peek())
     print("STORE_CHUNKS CALLED")
     print("Chunks:", len(chunks))
 
@@ -41,6 +50,9 @@ def store_chunks(chunks,embeddings,pdf_name,user_id):
 def search_chunks(query_embedding,user_id, selected_document=None, n_results=3):
 
     collection = get_collection()
+    print("\n========== SEARCH ==========")
+    print("USER ID:", user_id)
+    print("SELECTED DOCUMENT:", selected_document)
     if selected_document:
 
         filter_data = {
@@ -49,6 +61,8 @@ def search_chunks(query_embedding,user_id, selected_document=None, n_results=3):
                 {"source": selected_document}
             ]
         }
+        print("FILTER DATA:")
+        print(filter_data)
 
     else:
 
@@ -69,6 +83,7 @@ def search_chunks(query_embedding,user_id, selected_document=None, n_results=3):
 
     print("RESULTS:")
     print(results)
+    
 
     return {
         "documents": results["documents"][0],
