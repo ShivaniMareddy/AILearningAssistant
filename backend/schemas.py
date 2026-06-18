@@ -42,6 +42,7 @@ class MessageResponse(BaseModel):
         from_attributes = True
 class QuestionRequest(BaseModel):
     question: str
+    selected_document: str | None = None
 class DocumentResponse(BaseModel):
     id: int
     filename: str

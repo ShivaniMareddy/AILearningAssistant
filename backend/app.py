@@ -418,7 +418,8 @@ def upload_pdf(
     store_chunks(
         chunks,
         embeddings,
-        file.filename
+        file.filename,
+        current_user.id
     )
     new_document = Document(
         filename=file.filename,
@@ -435,14 +436,21 @@ def upload_pdf(
         "message": "PDF Uploaded and Stored Successfully"
     }
 @app.post("/ask")
-def ask_question(request: QuestionRequest):
+def ask_question(
+    request: QuestionRequest,
+    current_user: User = Depends(
+        get_current_user
+    )
+):
 
     query_embedding = create_embeddings(
         [request.question]
         )[0]
 
     results = search_chunks(
-        query_embedding
+        query_embedding,
+        current_user.id,
+        request.selected_document
     )
     
 
@@ -487,17 +495,18 @@ def ask_question(request: QuestionRequest):
         "sources": sources,
         "confidence": confidence
     }
-@app.get(
-    "/documents",
-    response_model=list[DocumentResponse]
-)
+@app.get("/documents")
 def get_documents(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-
-    documents = db.query(
-        Document
-    ).all()
+    documents = (
+        db.query(Document)
+        .filter(
+            Document.uploaded_by == current_user.id
+        )
+        .all()
+    )
 
     return documents
 @app.delete("/document/{document_id}")

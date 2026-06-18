@@ -11,7 +11,7 @@ def get_collection():
     )
 
 
-def store_chunks(chunks, embeddings, pdf_name):
+def store_chunks(chunks,embeddings,pdf_name,user_id):
     collection = get_collection()
 
     print("STORE_CHUNKS CALLED")
@@ -24,7 +24,10 @@ def store_chunks(chunks, embeddings, pdf_name):
         documents=chunks,
         embeddings=embeddings,
         metadatas=[
-            {"source": pdf_name}
+            {
+                "source": pdf_name,
+                "user_id": user_id
+            }
             for _ in chunks
         ]
     )
@@ -35,14 +38,25 @@ def store_chunks(chunks, embeddings, pdf_name):
     print("Total docs in collection:", collection.count())
 
 
-def search_chunks(query_embedding, n_results=3):
+def search_chunks(query_embedding,user_id, selected_document=None, n_results=3):
 
     collection = get_collection()
+    filter_data = {
+        "user_id": user_id
+    }
+
+    if selected_document:
+        filter_data["source"] = selected_document
 
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=n_results,
-        include=["documents", "metadatas", "distances"]
+        where=filter_data,
+        include=[
+            "documents",
+            "metadatas",
+            "distances"
+        ]
     )
 
     print("RESULTS:")
