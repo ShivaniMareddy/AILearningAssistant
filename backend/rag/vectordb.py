@@ -41,12 +41,20 @@ def store_chunks(chunks,embeddings,pdf_name,user_id):
 def search_chunks(query_embedding,user_id, selected_document=None, n_results=3):
 
     collection = get_collection()
-    filter_data = {
-        "user_id": user_id
-    }
-
     if selected_document:
-        filter_data["source"] = selected_document
+
+        filter_data = {
+            "$and": [
+                {"user_id": user_id},
+                {"source": selected_document}
+            ]
+        }
+
+    else:
+
+        filter_data = {
+            "user_id": user_id
+        }
 
     results = collection.query(
         query_embeddings=[query_embedding],
