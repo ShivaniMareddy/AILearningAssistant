@@ -727,3 +727,11 @@ def run_javascript(request: CodeRequest):
 
     finally:
         os.remove(temp_path)
+@app.get("/java-check")
+def java_check():
+    import shutil
+
+    return {
+        "java": shutil.which("java"),
+        "javac": shutil.which("javac")
+    }
